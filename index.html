@@ -6,15 +6,10 @@
     <title>愛蓮說（作者：周敦頤）　重組練習</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- 引入 Google Fonts: Chiron GoRound TC (昭源圓體) -->
+    <link href="https://cdn.jsdelivr.net/npm/gensen-rounded-web@1.0.1/css/gensen-rounded-tw.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@400;700&display=swap" rel="stylesheet">
-
-    <!-- 引入源泉圓體 (GenSenRounded TW) 作為後備 -->
-    <link href="https://cdn.jsdelivr.net/npm/gensen-rounded-web@1.0.1/css/gensen-rounded-tw.css" rel="stylesheet">
-    <!-- 保留 Noto Sans TC 作為後備 -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@400;500;700&display=swap" rel="stylesheet">
 
     <style>
         :root {
@@ -23,23 +18,27 @@
             --accent-color: #f59e0b; /* Amber 500 */
             --success-color: #10b981; /* Emerald 500 */
             --error-color: #ef4444; /* Red 500 */
-            /* 定義字體變數，優先使用 Chiron GoRound TC (昭源圓體) */
-            --main-font: "Chiron GoRound TC", 'GenSenRounded TW', 'Noto Sans TC', sans-serif;
+            
+            /* 👇 關鍵修改在這裡：字體順序設定 👇 */
+            /* 瀏覽器會從左讀到右：源泉圓體優先 -> Chiron GoRound TC 備用 -> 最後用微軟正黑體或系統預設 */
+            --main-font: 'GenSenRounded TW', 'Chiron GoRound TC', 'Microsoft JhengHei', sans-serif;
         }
 
         body {
             font-family: var(--main-font);
+            /* 👇 加上你提到的 Google Fonts 視覺微調屬性 👇 */
             font-optical-sizing: auto;
+            
             background-color: #f0fdf4;
             background-image: radial-gradient(#dcfce7 1px, transparent 1px);
             background-size: 20px 20px;
             color: #1f2937;
             -webkit-tap-highlight-color: transparent;
             /* 禁止文字選取，避免學生誤觸複製 */
-            -webkit-user-select: none; /* Safari / Chrome */
-            -moz-user-select: none;    /* Firefox */
-            -ms-user-select: none;     /* IE / Edge */
-            user-select: none;         /* Standard */
+            -webkit-user-select: none; 
+            -moz-user-select: none;    
+            -ms-user-select: none;     
+            user-select: none;         
         }
 
         /* Card Styles */
@@ -66,7 +65,7 @@
             user-select: none;
             transition: all 0.15s ease;
             box-shadow: 0 4px 0 #e5e7eb;
-            font-size: 1.35rem; /* 恢復原本大小 */
+            font-size: 1.35rem;
             margin: 6px;
             touch-action: manipulation;
         }
@@ -96,7 +95,7 @@
             gap: 10px;
             align-items: center;
             padding: 20px;
-            font-size: 1.35rem; /* 恢復原本大小 */
+            font-size: 1.35rem;
             line-height: 1.6;
             font-family: var(--main-font);
         }
@@ -406,6 +405,14 @@
                 const feedbackEl = card.querySelector('.feedback');
                 feedbackEl.textContent = '';
                 zone.classList.remove('correct', 'incorrect');
+
+                // 👇 修復 Bug 的地方 👇
+                // 如果這題原本已經答對，但現在被移動了任何一塊，就要取消它的完成狀態並扣除進度
+                if (zone.dataset.completed) {
+                    delete zone.dataset.completed;
+                    updateProgress(-1);
+                }
+
                 return;
             }
 
