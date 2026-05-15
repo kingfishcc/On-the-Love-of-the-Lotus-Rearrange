@@ -252,7 +252,7 @@
             <div class="max-w-xl mx-auto px-4 space-y-1">
                 <p class="text-gray-600 font-medium text-sm">原版工具：米克師；延伸開發：金魚老師</p>
                 <p class="text-gray-600 font-medium text-sm">
-                    工具連結：<a href="https://spedmix.pages.dev/unscramble" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-600 hover:underline transition-colors">https://reurl.cc/KO98Q9</a>
+                    工具連結：<a href="https://reurl.cc/KO98Q9" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-600 hover:underline transition-colors">https://reurl.cc/KO98Q9</a>
                 </p>
                 
                 <p class="text-xs text-gray-400 pt-2">本作品基於原版工具改編，採用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh_TW" target="_blank" rel="noopener noreferrer" class="hover:text-gray-500 underline decoration-dotted">CC BY-NC-SA 4.0</a> 授權。</p>
@@ -266,25 +266,25 @@
         const exercises = [
             {
                 id: 'q1',
-                label: '第一段①',
+                label: '第一段 ①',
                 answer: '水陸草木之花，可愛者甚蕃：晉陶淵明獨愛菊。自李唐來，世人甚愛牡丹。',
                 chunks: ['水陸草木之花，', '可愛者甚蕃：', '晉陶淵明獨愛菊。', '自李唐來，', '世人甚愛牡丹。']
             },
             {
                 id: 'q2',
-                label: '第一段②',
+                label: '第一段 ②',
                 answer: '予獨愛蓮之出淤泥而不染，濯清漣而不妖；中通外直，不蔓不枝；香遠益清，亭亭淨植，可遠觀而不可褻玩焉。',
                 chunks: ['予獨愛蓮之出淤泥而不染，', '濯清漣而不妖；', '中通外直，', '不蔓不枝；', '香遠益清，', '亭亭淨植，', '可遠觀而不可褻玩焉。']
             },
             {
                 id: 'q3',
-                label: '第二段①',
+                label: '第二段 ①',
                 answer: '予謂：菊，花之隱逸者也；牡丹，花之富貴者也；蓮，花之君子者也。',
                 chunks: ['予謂：', '菊，', '花之隱逸者也；', '牡丹，', '花之富貴者也；', '蓮，', '花之君子者也。']
             },
             {
                 id: 'q4',
-                label: '第二段②',
+                label: '第二段 ②',
                 answer: '噫！菊之愛，陶後鮮有聞。蓮之愛，同予者何人？牡丹之愛，宜乎眾矣！',
                 chunks: ['噫！', '菊之愛，', '陶後鮮有聞。', '蓮之愛，', '同予者何人？', '牡丹之愛，', '宜乎眾矣！']
             }
@@ -351,7 +351,8 @@
                 const shuffledWords = [...ex.chunks].sort(() => Math.random() - 0.5);
 
                 card.innerHTML = `
-                    <div class="mb-4 flex items-center gap-3">
+                    <!-- 👇 將這裡的 gap-3 修改為 gap-4 👇 -->
+                    <div class="mb-4 flex items-center gap-4">
                         <span class="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 font-bold text-lg border-2 border-emerald-200">${ex.id.replace('q', '')}</span>
                         <h2 class="text-xl font-bold text-gray-700 tracking-wide">${ex.label}</h2>
                     </div>
