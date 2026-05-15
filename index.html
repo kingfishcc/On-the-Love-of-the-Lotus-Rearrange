@@ -4,13 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>愛蓮說（作者：周敦頤）　重組練習</title>
+    
+    <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <link href="https://cdn.jsdelivr.net/npm/gensen-rounded-web@1.0.1/css/gensen-rounded-tw.css" rel="stylesheet">
+    <!-- 引入 SortableJS 實現拖曳排序功能 -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+
+    <!-- 引入 Google Fonts: Chiron GoRound TC (昭源圓體) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@400;700&display=swap" rel="stylesheet">
 
+    <!-- 引入源泉圓體 (GenSenRounded TW) 作為後備 -->
+    <link href="https://cdn.jsdelivr.net/npm/gensen-rounded-web@1.0.1/css/gensen-rounded-tw.css" rel="stylesheet">
+    
     <style>
         :root {
             --primary-color: #059669; /* Emerald 600 */
@@ -19,14 +27,12 @@
             --success-color: #10b981; /* Emerald 500 */
             --error-color: #ef4444; /* Red 500 */
             
-            /* 👇 關鍵修改在這裡：字體順序設定 👇 */
-            /* 瀏覽器會從左讀到右：源泉圓體優先 -> Chiron GoRound TC 備用 -> 最後用微軟正黑體或系統預設 */
-            --main-font: 'GenSenRounded TW', 'Chiron GoRound TC', 'Microsoft JhengHei', sans-serif;
+            /* 字體優先順序：昭源圓體 -> 源泉圓體 -> 系統預設黑體 */
+            --main-font: "Chiron GoRound TC", 'GenSenRounded TW', 'Microsoft JhengHei', sans-serif;
         }
 
         body {
             font-family: var(--main-font);
-            /* 👇 加上你提到的 Google Fonts 視覺微調屬性 👇 */
             font-optical-sizing: auto;
             
             background-color: #f0fdf4;
@@ -34,14 +40,15 @@
             background-size: 20px 20px;
             color: #1f2937;
             -webkit-tap-highlight-color: transparent;
-            /* 禁止文字選取，避免學生誤觸複製 */
+            
+            /* 禁止文字選取，避免拖曳時反白文字造成干擾 */
             -webkit-user-select: none; 
             -moz-user-select: none;    
             -ms-user-select: none;     
             user-select: none;         
         }
 
-        /* Card Styles */
+        /* 題目卡片外觀 */
         .exercise-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
@@ -51,7 +58,7 @@
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
-        /* Word Items */
+        /* 詞語卡片 (選項) */
         .word-item {
             display: inline-block;
             font-family: var(--main-font);
@@ -67,7 +74,7 @@
             box-shadow: 0 4px 0 #e5e7eb;
             font-size: 1.35rem;
             margin: 6px;
-            touch-action: manipulation;
+            touch-action: manipulation; /* 阻擋雙擊放大，讓點擊判斷更靈敏 */
         }
         .word-item:active {
             transform: translateY(4px);
@@ -83,7 +90,7 @@
              box-shadow: none;
         }
 
-        /* Drop Zone */
+        /* 作答區 */
         .drop-zone {
             min-height: 90px;
             background-color: #f9fafb;
@@ -120,6 +127,7 @@
             animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
         }
 
+        /* 錯誤時的震動動畫 */
         @keyframes shake {
             10%, 90% { transform: translate3d(-1px, 0, 0); }
             20%, 80% { transform: translate3d(2px, 0, 0); }
@@ -127,7 +135,25 @@
             40%, 60% { transform: translate3d(4px, 0, 0); }
         }
 
-        /* Buttons */
+        /* SortableJS 拖曳時的視覺效果 */
+        .sortable-ghost {
+            opacity: 0.4;
+            background-color: #d1fae5 !important;
+            border-color: #10b981 !important;
+        }
+        .sortable-drag {
+            cursor: grabbing !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+            transform: scale(1.05);
+        }
+        .drop-zone .word-item {
+            cursor: grab; /* 在作答區內的卡片顯示為可抓取 */
+        }
+        .drop-zone .word-item:active {
+            cursor: grabbing;
+        }
+
+        /* 功能按鈕 */
         .btn-action {
             transition: all 0.2s;
             border-radius: 16px;
@@ -137,7 +163,7 @@
             transform: scale(0.95);
         }
 
-        /* Feedback Animation Styles */
+        /* 檢查結果的回饋文字區塊 */
         .feedback {
             transition: all 0.3s ease;
             overflow: hidden;
@@ -154,7 +180,7 @@
             padding: 0;
         }
 
-        /* Completion Animation */
+        /* 全對完成動畫相關 */
         .checkmark-wrapper {
             width: 120px;
             height: 120px;
@@ -200,10 +226,10 @@
         }
     </style>
 </head>
-<!-- 加入 oncontextmenu="return false;" 禁止右鍵選單 -->
+<!-- 加入 oncontextmenu="return false;" 阻擋右鍵選單，防止學生誤按 -->
 <body class="min-h-screen p-4 pb-12" oncontextmenu="return false;">
 
-    <!-- Completion Overlay -->
+    <!-- Completion Overlay (全對時的彈出視窗) -->
     <div id="completion-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-500">
         <div class="bg-white p-8 md:p-12 rounded-3xl shadow-2xl text-center transform scale-90 transition-transform duration-500 max-w-md w-full mx-4 relative overflow-hidden" id="completion-modal">
             <div class="checkmark-wrapper mb-6">
@@ -221,7 +247,7 @@
     </div>
 
     <div class="max-w-3xl mx-auto">
-        <!-- Header -->
+        <!-- 網頁標題區塊 -->
         <header class="text-center mb-10">
             <div class="inline-block p-1 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 mb-4">
                 <div class="bg-white rounded-full px-6 py-2">
@@ -235,7 +261,7 @@
             </h1>
             <p class="text-lg text-gray-600 font-bold tracking-wide">請將下方文句重新排列成正確的課文段落</p>
             
-            <!-- Progress -->
+            <!-- 進度條 -->
             <div class="mt-6 max-w-xs mx-auto">
                 <div class="h-4 bg-gray-200 rounded-full overflow-hidden border border-gray-100">
                     <div id="progress-bar" class="h-full bg-gradient-to-r from-emerald-400 to-teal-400 transition-all duration-500 ease-out" style="width: 0%"></div>
@@ -244,17 +270,16 @@
             </div>
         </header>
 
-        <!-- Exercise Container -->
+        <!-- 練習題目將會被動態注入到這個容器中 -->
         <div id="container-exercises" class="space-y-8"></div>
 
-        <!-- Footer / Citation -->
+        <!-- 頁尾宣告 -->
         <footer class="mt-16 mb-8 text-center">
             <div class="max-w-xl mx-auto px-4 space-y-1">
-                <p class="text-gray-600 font-medium text-sm">原版工具：米克師；延伸開發：金魚老師</p>
+                <p class="text-gray-600 font-medium text-sm">原版工具：特教米克師；延伸開發：金魚老師</p>
                 <p class="text-gray-600 font-medium text-sm">
                     工具連結：<a href="https://reurl.cc/KO98Q9" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-600 hover:underline transition-colors">https://reurl.cc/KO98Q9</a>
                 </p>
-                
                 <p class="text-xs text-gray-400 pt-2">本作品基於原版工具改編，採用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh_TW" target="_blank" rel="noopener noreferrer" class="hover:text-gray-500 underline decoration-dotted">CC BY-NC-SA 4.0</a> 授權。</p>
             </div>
         </footer>
@@ -262,29 +287,29 @@
     </div>
 
     <script>
-        // --- DATA ---
+        // --- 題庫資料 ---
         const exercises = [
             {
                 id: 'q1',
-                label: '第一段 ①',
+                label: '第一段①',
                 answer: '水陸草木之花，可愛者甚蕃：晉陶淵明獨愛菊。自李唐來，世人甚愛牡丹。',
                 chunks: ['水陸草木之花，', '可愛者甚蕃：', '晉陶淵明獨愛菊。', '自李唐來，', '世人甚愛牡丹。']
             },
             {
                 id: 'q2',
-                label: '第一段 ②',
+                label: '第一段②',
                 answer: '予獨愛蓮之出淤泥而不染，濯清漣而不妖；中通外直，不蔓不枝；香遠益清，亭亭淨植，可遠觀而不可褻玩焉。',
                 chunks: ['予獨愛蓮之出淤泥而不染，', '濯清漣而不妖；', '中通外直，', '不蔓不枝；', '香遠益清，', '亭亭淨植，', '可遠觀而不可褻玩焉。']
             },
             {
                 id: 'q3',
-                label: '第二段 ①',
+                label: '第二段①',
                 answer: '予謂：菊，花之隱逸者也；牡丹，花之富貴者也；蓮，花之君子者也。',
                 chunks: ['予謂：', '菊，', '花之隱逸者也；', '牡丹，', '花之富貴者也；', '蓮，', '花之君子者也。']
             },
             {
                 id: 'q4',
-                label: '第二段 ②',
+                label: '第二段②',
                 answer: '噫！菊之愛，陶後鮮有聞。蓮之愛，同予者何人？牡丹之愛，宜乎眾矣！',
                 chunks: ['噫！', '菊之愛，', '陶後鮮有聞。', '蓮之愛，', '同予者何人？', '牡丹之愛，', '宜乎眾矣！']
             }
@@ -293,39 +318,30 @@
         let completedCount = 0;
         const totalCount = exercises.length;
         const synth = window.speechSynthesis;
+        window.isDraggingItem = false; // 用於判斷目前是否正在拖曳，防止誤觸點擊
 
-        // --- FUNCTIONS ---
-
+        // --- 語音發音函式 (包含破音字處理) ---
         function speak(text, lang = 'zh-TW', rate = 0.95) {
-            if (!text) return;
-            synth.cancel();
+            if (!text || !synth) return; // 增強相容性防護
+            synth.cancel(); // 停止先前的語音
 
             // 針對破音字進行語音修正
             let speechText = text;
 
-            // --- 《愛蓮說》修正 ---
-            
             // 甚蕃 (蕃 -> 凡 ㄈㄢˊ)
             speechText = speechText.replace(/甚蕃/g, '甚凡');
-
             // 濯清漣 (濯 -> 濁 ㄓㄨㄛˊ)
             speechText = speechText.replace(/濯清漣/g, '濁清漣');
-            
             // 褻玩 (褻 -> 謝 ㄒㄧㄝˋ)
             speechText = speechText.replace(/褻玩/g, '謝玩');
-            
             // 鮮有聞 (鮮 -> 顯 ㄒㄧㄢˇ，此處指少)
             speechText = speechText.replace(/鮮有聞/g, '顯有聞');
 
-            // --- 新增修正 ---
-            
             // 不蔓不枝 (不 -> ㄅㄨˊ)
             // 技巧：將「不」替換為同音二聲字「醭」（讀音 ㄅㄨˊ），將「蔓」替換為同音四聲字「慢」以確保語音引擎變調正確
             speechText = speechText.replace(/不蔓/g, '醭慢');
 
-            // 予 (予 -> ㄩˊ)
-            // 技巧：將「予」替換為「余」
-            // 涵蓋：予獨愛蓮、予謂、同予者
+            // 予 (予 -> ㄩˊ) 技巧：將「予」替換為「余」
             speechText = speechText.replace(/予獨/g, '余獨');
             speechText = speechText.replace(/予謂/g, '余謂');
             speechText = speechText.replace(/同予者/g, '同余者');
@@ -339,6 +355,7 @@
             synth.speak(utterThis);
         }
 
+        // --- 畫面渲染函式 ---
         function renderApp() {
             const container = document.getElementById('container-exercises');
 
@@ -348,24 +365,27 @@
                 card.id = `card-${ex.id}`;
                 card.dataset.id = ex.id;
 
+                // 隨機打亂該題的詞語
                 const shuffledWords = [...ex.chunks].sort(() => Math.random() - 0.5);
 
                 card.innerHTML = `
-                    <!-- 👇 將這裡的 gap-3 修改為 gap-4 👇 -->
+                    <!-- 標題與編號 (此處為 gap-4 設定) -->
                     <div class="mb-4 flex items-center gap-4">
-                        <span class="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 font-bold text-lg border-2 border-emerald-200">${ex.id.replace('q', '')}</span>
+                        <span class="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 font-bold text-lg border-2 border-emerald-200">
+                            ${ex.id.replace('q', '')}
+                        </span>
                         <h2 class="text-xl font-bold text-gray-700 tracking-wide">${ex.label}</h2>
                     </div>
                     
-                    <!-- Word Bank -->
+                    <!-- Word Bank (選項區) -->
                     <div class="word-bank flex flex-wrap gap-3 mb-6 justify-center" id="bank-${ex.id}">
                         ${shuffledWords.map(word => `<div class="word-item">${word}</div>`).join('')}
                     </div>
 
-                    <!-- Drop Zone -->
+                    <!-- Drop Zone (作答區) -->
                     <div class="drop-zone mb-4" id="zone-${ex.id}"></div>
 
-                    <!-- Actions -->
+                    <!-- Actions (操作按鈕) -->
                     <div class="flex flex-wrap items-center gap-3 mt-2">
                         <button class="btn-action check-btn bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-8 rounded-xl shadow-md border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1 transition-all text-lg flex-grow sm:flex-grow-0" data-id="${ex.id}">檢查答案</button>
                         <button class="btn-action reset-btn bg-white hover:bg-gray-50 text-gray-600 border-2 border-gray-300 border-b-4 font-bold py-3 px-6 rounded-xl active:border-b-2 active:translate-y-1 transition-all text-lg" data-id="${ex.id}">重置</button>
@@ -374,6 +394,8 @@
                             聽解答
                         </button>
                     </div>
+                    
+                    <!-- 提示文字區 -->
                     <div class="feedback text-lg font-bold flex items-center"></div>
                 `;
 
@@ -381,57 +403,59 @@
             });
         }
 
-        // --- EVENT DELEGATION ---
+        // --- 事件委派 (處理點擊行為) ---
         document.body.addEventListener('click', (e) => {
             const target = e.target;
 
-            // 1. Word Item Click (Chinese blocks)
+            // 1. 點擊詞語卡片
             if (target.classList.contains('word-item')) {
+                // 如果系統判定目前正在拖曳中，則取消點擊動作 (不發出語音、不跳回選項區)
+                if (window.isDraggingItem) return;
+
                 const card = target.closest('.exercise-card');
                 if (!card) return;
                 const exId = card.dataset.id;
                 const bank = document.getElementById(`bank-${exId}`);
                 const zone = document.getElementById(`zone-${exId}`);
 
-                // Speak in Chinese
+                // 播放中文語音
                 speak(target.innerText, 'zh-TW', 1.0);
 
+                // 在 選項區 與 作答區 之間移動卡片
                 if (target.parentElement === bank) {
                     zone.appendChild(target);
                 } else {
                     bank.appendChild(target);
                 }
 
-                // Reset state
+                // 移動後，清除原有的對錯狀態
                 const feedbackEl = card.querySelector('.feedback');
                 feedbackEl.textContent = '';
                 zone.classList.remove('correct', 'incorrect');
 
-                // 👇 修復 Bug 的地方 👇
-                // 如果這題原本已經答對，但現在被移動了任何一塊，就要取消它的完成狀態並扣除進度
+                // 修正：如果本題原本已答對，但被手動移除了一張卡片，就要扣除進度
                 if (zone.dataset.completed) {
                     delete zone.dataset.completed;
                     updateProgress(-1);
                 }
-
                 return;
             }
 
-            // 2. Check Button
+            // 2. 點擊「檢查答案」按鈕
             if (target.classList.contains('check-btn')) {
                 const id = target.dataset.id;
                 checkAnswer(id);
                 return;
             }
 
-            // 3. Reset Button
+            // 3. 點擊「重置」按鈕
             if (target.classList.contains('reset-btn')) {
                 const id = target.dataset.id;
                 resetQuestion(id);
                 return;
             }
 
-            // 4. Hint Button (Listen to Answer)
+            // 4. 點擊「聽解答」按鈕
             if (target.closest('.hint-btn')) {
                 const btn = target.closest('.hint-btn');
                 const text = btn.dataset.text;
@@ -440,7 +464,7 @@
             }
         });
 
-        // --- Overlay Logic ---
+        // --- 彈出視窗與動畫邏輯 ---
         function showOverlay() {
             const overlay = document.getElementById('completion-overlay');
             const modal = document.getElementById('completion-modal');
@@ -480,6 +504,7 @@
             container.appendChild(confetti);
         }
 
+        // --- 遊戲檢查與重置邏輯 ---
         function checkAnswer(id) {
             const zone = document.getElementById(`zone-${id}`);
             const card = document.getElementById(`card-${id}`);
@@ -488,7 +513,7 @@
             
             const rawWords = Array.from(zone.children).map(el => el.innerText);
             
-            // Join without spaces for Chinese sentence comparison
+            // 將詞語組合起來比對正確解答
             let userSentence = rawWords.join('');
             let correctAnswer = exData.answer;
 
@@ -497,6 +522,7 @@
                 zone.classList.remove('incorrect');
                 zone.classList.add('correct');
                 
+                // 只有第一次答對才增加進度
                 if (!zone.dataset.completed) {
                     zone.dataset.completed = 'true';
                     updateProgress(1);
@@ -506,6 +532,7 @@
                 zone.classList.remove('correct');
                 zone.classList.add('incorrect');
                 
+                // 重置震動動畫
                 zone.style.animation = 'none';
                 zone.offsetHeight; 
                 zone.style.animation = null; 
@@ -518,8 +545,10 @@
             const card = document.getElementById(`card-${id}`);
             const feedbackEl = card.querySelector('.feedback');
             
+            // 將作答區的所有詞語移回選項區
             Array.from(zone.children).forEach(child => bank.appendChild(child));
             
+            // 重新打亂選項區的詞語
             const words = Array.from(bank.children);
             words.sort(() => Math.random() - 0.5);
             words.forEach(w => bank.appendChild(w));
@@ -527,6 +556,7 @@
             feedbackEl.textContent = '';
             zone.classList.remove('correct', 'incorrect');
             
+            // 如果原本是答對的狀態，因重置需扣除進度
             if (zone.dataset.completed) {
                 delete zone.dataset.completed;
                 updateProgress(-1);
@@ -535,7 +565,7 @@
 
         function updateProgress(change) {
             completedCount += change;
-            completedCount = Math.max(0, Math.min(completedCount, totalCount));
+            completedCount = Math.max(0, Math.min(completedCount, totalCount)); // 防止低於 0 或超過最大值
             
             const percentage = Math.round((completedCount / totalCount) * 100);
             const bar = document.getElementById('progress-bar');
@@ -546,7 +576,7 @@
 
             if (completedCount === totalCount) {
                 bar.classList.remove('from-emerald-400', 'to-teal-400');
-                bar.classList.add('from-amber-400', 'to-orange-500'); // Celebration color
+                bar.classList.add('from-amber-400', 'to-orange-500'); // 達成 100% 時變為慶祝橘色
                 showOverlay();
             } else {
                 bar.classList.add('from-emerald-400', 'to-teal-400');
@@ -554,8 +584,40 @@
             }
         }
 
-        // Init
+        // --- 網頁載入執行 ---
         renderApp();
+
+        // 畫面渲染完成後，為每一個「作答區」初始化拖曳排序功能 (SortableJS)
+        exercises.forEach((ex) => {
+            const zone = document.getElementById(`zone-${ex.id}`);
+            new Sortable(zone, {
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                dragClass: 'sortable-drag',
+                delay: 150, // 觸控裝置需長按 150 毫秒才能拖曳 (防止誤觸與干擾滑動)
+                delayOnTouchOnly: true, // 滑鼠可直接拖曳，僅觸控裝置需要延遲
+                onStart: function (evt) {
+                    // 開始拖曳時，標記全域變數為拖曳中，這能有效防止放開時觸發 click 事件
+                    window.isDraggingItem = true;
+                },
+                onEnd: function (evt) {
+                    // 拖曳結束時，清除視覺狀態與進度（如果位置被改變了）
+                    const card = evt.from.closest('.exercise-card');
+                    const feedbackEl = card.querySelector('.feedback');
+                    feedbackEl.textContent = '';
+                    evt.from.classList.remove('correct', 'incorrect');
+                    
+                    // 如果原本答對了，但使用者又調整了順序，就要扣除進度重新檢查
+                    if (evt.from.dataset.completed) {
+                        delete evt.from.dataset.completed;
+                        updateProgress(-1);
+                    }
+                    
+                    // 稍微延遲解除拖曳狀態，確保能完美蓋過滑鼠/手指鬆開瞬間的 Click 判定
+                    setTimeout(() => { window.isDraggingItem = false; }, 100);
+                }
+            });
+        });
 
     </script>
 </body>
